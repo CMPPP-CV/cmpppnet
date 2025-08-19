@@ -20,6 +20,7 @@ from .margin_loss import MarginL2Loss
 from .mse_loss import MSELoss, mse_loss
 from .multipos_cross_entropy_loss import MultiPosCrossEntropyLoss
 from .pisa_loss import carl_loss, isr_p
+from .ppp_loss import PPPLoss
 from .seesaw_loss import SeesawLoss
 from .smooth_l1_loss import L1Loss, SmoothL1Loss, l1_loss, smooth_l1_loss
 from .triplet_loss import TripletLoss
@@ -38,5 +39,5 @@ __all__ = [
     'QualityFocalLoss', 'DistributionFocalLoss', 'VarifocalLoss',
     'KnowledgeDistillationKLDivLoss', 'SeesawLoss', 'DiceLoss', 'EQLV2Loss',
     'MarginL2Loss', 'MultiPosCrossEntropyLoss', 'L2Loss', 'TripletLoss',
-    'DDQAuxLoss', 'CrossEntropyCustomLoss', 'FocalCustomLoss'
+    'DDQAuxLoss', 'CrossEntropyCustomLoss', 'FocalCustomLoss', 'PPPLoss'
 ]
