@@ -5,7 +5,13 @@ _base_ = [
     '../_base_/default_runtime.py',
 ]
 
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=70, val_interval=70)
+
+
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=8, val_interval=70)
+train_dataloader = dict(
+    batch_size=4,
+    num_workers=2
+)
 # default_scope = 'mmdet'
 
 # learning rate
@@ -27,3 +33,5 @@ optim_wrapper = dict(
     optimizer=dict(type='SGD', lr=1e-2, momentum=0.9, weight_decay=0.0001),
     clip_grad=dict(max_norm=35, norm_type=2)
     )
+
+load_from='/net/milz/riedlinger/poisson_point_process/checkpoints/deeplabv3plus_r50_backbone.pth'
