@@ -132,6 +132,7 @@ class CMPPPHead(BaseDenseHead):
         kernel = torch.ones((1, 1, self.pooling_size, self.pooling_size), device=x.device)
         pooled_intensity = F.conv2d(lam.unsqueeze(1), kernel, stride=self.pooling_size)
         scores, indices, _, cy, cx = get_topk_from_heatmap(pooled_intensity, k=int(num_predictions.item()))
+        valid_mask = (torch.cumsum(scores, dim=1) < num_predictions.long())
 
         # Gather and determine extent of predicted bounding boxes
         wh_map = outs[1]
@@ -141,13 +142,13 @@ class CMPPPHead(BaseDenseHead):
 
         cx = cx * self.pooling_size + self.pooling_size // 2
         cy = cy * self.pooling_size + self.pooling_size // 2
-        tl_x = cx - wh[..., 0] / 2
-        tl_y = cy - wh[..., 1] / 2
-        br_x = cx + wh[..., 0] / 2
-        br_y = cy + wh[..., 1] / 2
+        tl_x = (cx - wh[..., 0] / 2)[valid_mask.bool()]
+        tl_y = (cy - wh[..., 1] / 2)[valid_mask.bool()]
+        br_x = (cx + wh[..., 0] / 2)[valid_mask.bool()]
+        br_y = (cy + wh[..., 1] / 2)[valid_mask.bool()]
 
         # Assemble bounding boxes and rescale to original image size if necessary
-        batch_bboxes = torch.cat([tl_x, tl_y, br_x, br_y],dim=0).permute(1, 0)
+        batch_bboxes = torch.stack([tl_x, tl_y, br_x, br_y],dim=0).permute(1, 0)
         img_meta = batch_img_metas[0]
         if rescale and 'scale_factor' in img_meta:
             batch_bboxes[..., :4] /= batch_bboxes.new_tensor(
@@ -166,8 +167,8 @@ class CMPPPHead(BaseDenseHead):
         # Assemble predicted instance objects
         results = InstanceData()
         results.bboxes = batch_bboxes
-        results.scores = objectness.squeeze()
-        results.labels = labels.long().squeeze()
+        results.scores = objectness[valid_mask.bool()]
+        results.labels = labels[valid_mask.bool()].long()
 
         return results, lam, wh_map, class_map
     
