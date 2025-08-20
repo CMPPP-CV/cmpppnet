@@ -74,5 +74,6 @@ model = dict(
         loss_center_heatmap=dict(type='PPPLoss', loss_weight=1.0),
         loss_classification=dict(type='CrossEntropyLoss', loss_weight=1.0),
         loss_wh=dict(type='L1Loss', loss_weight=1.0),
+        pooling_size=16,
     )
 )

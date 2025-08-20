@@ -1,10 +1,12 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
-import mmdet
+from mmengine.structures import InstanceData
 from mmdet.registry import MODELS
-from mmdet.utils import ConfigType, OptConfigType, OptMultiConfig
+from mmdet.utils import ConfigType
 from .base_dense_head import BaseDenseHead
+from ..utils import get_topk_from_heatmap, transpose_and_gather_feat
 
 
 @MODELS.register_module()
@@ -26,6 +28,7 @@ class CMPPPHead(BaseDenseHead):
                  loss_classification: ConfigType = dict(type='CrossEntropyLoss', loss_weight=1.0),
                  loss_wh: ConfigType = dict(type='L1Loss', loss_weight=0.1),
                  init_cfg=None,
+                 pooling_size=4,
                  **kwargs):
         super().__init__(init_cfg=init_cfg)
 
@@ -34,6 +37,7 @@ class CMPPPHead(BaseDenseHead):
         self.loss_center_heatmap = MODELS.build(loss_center_heatmap)
         self.loss_classification = MODELS.build(loss_classification)
         self.loss_wh = MODELS.build(loss_wh)
+        self.pooling_size = pooling_size
         self.fp16_enabled = False
 
     def forward(self, x):
@@ -114,6 +118,58 @@ class CMPPPHead(BaseDenseHead):
             offset_target=offset_target,
             wh_offset_target_weight=wh_offset_target_weight)
         return target_result, avg_factor
+    
+    def predict(self, x, batch_data_samples, rescale = False):
+        batch_img_metas = [
+            data_samples.metainfo for data_samples in batch_data_samples
+        ]
+
+        outs = self(x) # (lambda, wh map, class map)
+        lam = torch.exp(outs[0]) / torch.tensor(self.loss_center_heatmap.test_resolution).prod()
+
+        # Determine expected number of objects and select local maxima
+        num_predictions = torch.sum(lam)
+        kernel = torch.ones((1, 1, self.pooling_size, self.pooling_size), device=x.device)
+        pooled_intensity = F.conv2d(lam.unsqueeze(1), kernel, stride=self.pooling_size)
+        scores, indices, _, cy, cx = get_topk_from_heatmap(pooled_intensity, k=int(num_predictions.item()))
+
+        # Gather and determine extent of predicted bounding boxes
+        wh_map = outs[1]
+        wh = transpose_and_gather_feat(
+            F.avg_pool2d(wh_map, self.pooling_size, self.pooling_size), indices
+        )
+
+        cx = cx * self.pooling_size + self.pooling_size // 2
+        cy = cy * self.pooling_size + self.pooling_size // 2
+        tl_x = cx - wh[..., 0] / 2
+        tl_y = cy - wh[..., 1] / 2
+        br_x = cx + wh[..., 0] / 2
+        br_y = cy + wh[..., 1] / 2
+
+        # Assemble bounding boxes and rescale to original image size if necessary
+        batch_bboxes = torch.cat([tl_x, tl_y, br_x, br_y],dim=0).permute(1, 0)
+        img_meta = batch_img_metas[0]
+        if rescale and 'scale_factor' in img_meta:
+            batch_bboxes[..., :4] /= batch_bboxes.new_tensor(
+                img_meta['scale_factor']).repeat((1, 2))
+        
+        # Determine PPP analogue of objectness score
+        objectness = scores.clamp(0, 1)
+
+        # Determine predicted classes
+        class_map = F.softmax(outs[2], dim=1)
+        classes = transpose_and_gather_feat(
+            F.avg_pool2d(class_map, self.pooling_size, self.pooling_size), indices
+        )
+        labels = classes.argmax(dim=2)
+
+        # Assemble predicted instance objects
+        results = InstanceData()
+        results.bboxes = batch_bboxes
+        results.scores = objectness.squeeze()
+        results.labels = labels.long().squeeze()
+
+        return results, lam, wh_map, class_map
     
     def loss_by_feat(
         self, 

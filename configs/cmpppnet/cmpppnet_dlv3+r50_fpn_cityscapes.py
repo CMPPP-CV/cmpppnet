@@ -9,7 +9,7 @@ _base_ = [
 
 train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=8, val_interval=70)
 train_dataloader = dict(
-    batch_size=4,
+    batch_size=2,
     num_workers=2
 )
 # default_scope = 'mmdet'

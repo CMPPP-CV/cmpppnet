@@ -25,3 +25,18 @@ class CMPPPNet(SingleStageDetector):
             test_cfg=test_cfg,
             data_preprocessor=data_preprocessor,
             init_cfg=init_cfg)
+        
+
+    def predict(self, batch_inputs, batch_data_samples, rescale=True):
+        x = self.extract_feat(batch_inputs)
+        results, lam, wh_map, class_map = self.bbox_head.predict(
+            x, 
+            batch_data_samples, 
+            rescale=rescale
+        )
+        batch_data_samples = self.add_pred_to_datasample(
+            batch_data_samples, [results])
+        # batch_data_samples[0].set_data({'lam': lam, 'wh_map': wh_map, 'class_map': class_map})
+        
+        return batch_data_samples
+    
