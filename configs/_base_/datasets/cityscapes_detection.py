@@ -30,9 +30,9 @@ train_pipeline = [
         min_ious=(0.4, 0.5, 0.6, 0.7, 0.8, 0.9),
         min_crop_size=0.3),
     dict(
-        type='RandomResize',
-        scale=[(2048, 800), (2048, 1024)],
-        # scale=[(1024, 512)],
+        type='Resize',
+        # scale=[(2048, 800), (2048, 1024)],
+        scale=(1024, 512),
         keep_ratio=True),
     dict(type='RandomFlip', prob=0.5),
     dict(type='PackDetInputs')

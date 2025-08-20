@@ -7,10 +7,10 @@ _base_ = [
 
 
 
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=8, val_interval=70)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=8, val_interval=1)
 train_dataloader = dict(
-    batch_size=2,
-    num_workers=2
+    batch_size=8,
+    num_workers=4
 )
 # default_scope = 'mmdet'
 
@@ -21,9 +21,9 @@ param_scheduler = [
     dict(
         type='MultiStepLR',
         begin=0,
-        end=90,
+        end=8,
         by_epoch=True,
-        milestones=[30, 50],
+        milestones=[4, 6],
         gamma=0.1)
 ]
 
