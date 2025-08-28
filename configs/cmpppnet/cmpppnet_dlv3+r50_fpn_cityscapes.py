@@ -7,12 +7,19 @@ _base_ = [
 
 
 
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=8, val_interval=1)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=192, val_interval=1)
 train_dataloader = dict(
-    batch_size=8,
+    batch_size=16,
     num_workers=4
 )
 # default_scope = 'mmdet'
+
+model=dict(
+    bbox_head=dict(
+        type='CMPPPHead',
+        pooling_size=16,
+    )
+)
 
 # learning rate
 param_scheduler = [
@@ -21,16 +28,16 @@ param_scheduler = [
     dict(
         type='MultiStepLR',
         begin=0,
-        end=8,
+        end=128,
         by_epoch=True,
-        milestones=[4, 6],
+        milestones=[128],
         gamma=0.1)
 ]
 
 # optimizer
 optim_wrapper = dict(
     type='OptimWrapper',
-    optimizer=dict(type='SGD', lr=1e-2, momentum=0.9, weight_decay=0.0001),
+    optimizer=dict(type='SGD', lr=2e-2, momentum=0.9, weight_decay=0.0001),
     clip_grad=dict(max_norm=35, norm_type=2)
     )
 

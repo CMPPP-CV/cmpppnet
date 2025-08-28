@@ -39,7 +39,7 @@ class CMPPPNet(SingleStageDetector):
         )
         batch_data_samples = self.add_pred_to_datasample(
             batch_data_samples, [results])
-        # batch_data_samples[0].set_data({'lam': lam, 'wh_map': wh_map, 'class_map': class_map})
+        batch_data_samples[0].set_data({'lam': lam, 'wh_map': wh_map, 'class_map': class_map})
         
         return batch_data_samples
     

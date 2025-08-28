@@ -18,15 +18,16 @@ class PPPLoss(nn.Module):
         self.loss_weight = loss_weight
         self.test_resolution = test_resolution
 
-    def forward(self, inputs, targets, weight=None, avg_factor=1.0):
+    def forward(self, inputs, targets, avg_factor=1.0):
         """Compute the PPP loss."""
         # H, W = inputs.shape[-2:]
 
-        lam = torch.exp(inputs) / torch.tensor(self.test_resolution).prod()
+        pixel_scale = torch.tensor(self.test_resolution).prod()
+        lam = torch.exp(inputs) / pixel_scale
         integral_term = lam.sum()
 
 
         # observation_term = torch.tensor(0.0, device=integral_term.device)
         mask = targets.sum(dim=1)
         
-        return (integral_term - (mask * inputs).sum()) / avg_factor
+        return (integral_term - (mask * (inputs - torch.log(pixel_scale))).sum()) / avg_factor

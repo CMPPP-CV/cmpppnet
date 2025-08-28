@@ -133,6 +133,7 @@ class CMPPPHead(BaseDenseHead):
         pooled_intensity = F.conv2d(lam.unsqueeze(1), kernel, stride=self.pooling_size)
         scores, indices, _, cy, cx = get_topk_from_heatmap(pooled_intensity, k=int(num_predictions.item()))
         valid_mask = (torch.cumsum(scores, dim=1) < num_predictions.long())
+        # valid_mask = (scores >= 0.0)
 
         # Gather and determine extent of predicted bounding boxes
         wh_map = outs[1]
@@ -198,7 +199,6 @@ class CMPPPHead(BaseDenseHead):
         loss_center = self.loss_center_heatmap(
             center_heatmap_preds,
             center_heatmap_target,
-            # weight=wh_offset_target_weight[:, 0, ...][:, None, ...],
             avg_factor=avg_factor
         )
 
