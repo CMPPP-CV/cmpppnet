@@ -24,6 +24,7 @@ class CMPPPHead(BaseDenseHead):
     def __init__(self, 
                  in_channels: int, 
                  num_classes: int, 
+                 feat_channels: int = 64,
                  loss_center_heatmap: ConfigType = dict(type='PPPLoss', use_sigmoid=True, loss_weight=1.0),
                  loss_classification: ConfigType = dict(type='CrossEntropyLoss', loss_weight=1.0),
                  loss_wh: ConfigType = dict(type='L1Loss', loss_weight=0.1),
@@ -33,12 +34,28 @@ class CMPPPHead(BaseDenseHead):
         super().__init__(init_cfg=init_cfg)
 
         self.in_channels = in_channels
+        self.feat_channels = feat_channels
         self.num_classes = num_classes
+
+        # self.intensity_head = self._build_head(in_channels, feat_channels, 1)
+        # self.wh_head = self._build_head(in_channels, feat_channels, 2)
+        # self.class_head = self._build_head(in_channels, feat_channels, num_classes)
         self.loss_center_heatmap = MODELS.build(loss_center_heatmap)
         self.loss_classification = MODELS.build(loss_classification)
         self.loss_wh = MODELS.build(loss_wh)
         self.pooling_size = pooling_size
         self.fp16_enabled = False
+
+    def _build_head(self, in_channels: int, feat_channels: int,
+                    out_channels: int) -> nn.Sequential:
+        """Build head for each branch."""
+        layer = nn.Sequential(
+            nn.Conv2d(in_channels, feat_channels, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(feat_channels, feat_channels, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(feat_channels, out_channels, kernel_size=1))
+        return layer
 
     def forward(self, x):
         """Forward function."""
@@ -46,7 +63,9 @@ class CMPPPHead(BaseDenseHead):
                 x[:, 1:3, ...],  # width-height predictions
                 x[:, -self.num_classes:, ...]               # class predictions
                 )
-    
+
+        # return (self.intensity_head(x)[:, 0, ...], self.wh_head(x), self.class_head(x))
+
     def get_targets(self, gt_bboxes, gt_labels,
                     feat_shape, img_shape):
         """Compute regression and classification targets in multiple images.
@@ -132,8 +151,10 @@ class CMPPPHead(BaseDenseHead):
         kernel = torch.ones((1, 1, self.pooling_size, self.pooling_size), device=x.device)
         pooled_intensity = F.conv2d(lam.unsqueeze(1), kernel, stride=self.pooling_size)
         scores, indices, _, cy, cx = get_topk_from_heatmap(pooled_intensity, k=int(num_predictions.item()))
-        valid_mask = (torch.cumsum(scores, dim=1) < num_predictions.long())
-        # valid_mask = (scores >= 0.0)
+        # scores, indices, _, cy, cx = get_topk_from_heatmap(pooled_intensity, k=100)
+        valid_mask = (torch.cumsum(scores, dim=1) < torch.max(num_predictions - 0.5,num_predictions.long()))
+        # valid_mask = (scores > 0.5).bool()
+        # valid_mask = torch.ones_like(scores).bool()
 
         # Gather and determine extent of predicted bounding boxes
         wh_map = outs[1]

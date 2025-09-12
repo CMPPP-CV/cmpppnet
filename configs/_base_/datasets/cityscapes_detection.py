@@ -32,6 +32,7 @@ train_pipeline = [
     dict(
         type='Resize',
         # scale=[(2048, 800), (2048, 1024)],
+        # scale=(512, 256),
         scale=(1024, 512),
         keep_ratio=True),
     dict(type='RandomFlip', prob=0.5),
@@ -40,8 +41,9 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    # dict(type='Resize', scale=(2048, 1024), keep_ratio=True),
-    dict(type='Resize', scale=(1024, 512), keep_ratio=True),
+    # dict(type='Resize', scale=(4096, 2048), keep_ratio=True),
+    dict(type='Resize', scale=(2048, 1024), keep_ratio=True),
+    # dict(type='Resize', scale=(1024, 512), keep_ratio=True),
     # If you don't have a gt annotation, delete the pipeline
     dict(type='LoadAnnotations', with_bbox=True),
     dict(
@@ -51,7 +53,7 @@ test_pipeline = [
 ]
 
 train_dataloader = dict(
-    batch_size=2,
+    batch_size=16,
     num_workers=1,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),

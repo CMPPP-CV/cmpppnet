@@ -109,13 +109,13 @@ class HeatmapInferencer(DetInferencer):
                 result['panoptic_seg'] = pan
         
         if "lam" in data_sample:                            
-            lam = data_sample.lam.cpu().numpy()
+            lam = data_sample.lam.cpu().numpy().astype(np.float16)
             result['lam'] = lam.tolist()
         if "wh_map" in data_sample:
-            wh_map = data_sample.wh_map.cpu().numpy()
+            wh_map = data_sample.wh_map.cpu().numpy().astype(np.float16)
             result['wh_map'] = wh_map.tolist()
         if "class_map" in data_sample:
-            class_map = data_sample.class_map.cpu().numpy()
+            class_map = data_sample.class_map.cpu().numpy().astype(np.float16)
             result['class_map'] = class_map.tolist()
         
 
