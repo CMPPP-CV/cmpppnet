@@ -23,19 +23,30 @@ classes = ('pedestrian', 'people', 'bicycle', 'car', 'van', 'truck',
 train_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
     dict(type='LoadAnnotations', with_bbox=True),
+    dict(
+        type='Expand',
+        mean=[123.675, 116.28, 103.53],
+        to_rgb=True,
+        ratio_range=(1, 2)),
+    dict(
+        type='MinIoURandomCrop',
+        min_ious=(0.4, 0.5, 0.6, 0.7, 0.8, 0.9),
+        min_crop_size=0.3),
     dict(type='Resize', scale=(1024,512), keep_ratio=True),
     dict(type='RandomFlip', prob=0.5),
     dict(type='PackDetInputs')
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='Resize', scale=(1024,512), keep_ratio=True),
-    # If you don't have a gt annotation, delete the pipeline
+    # dict(type='Resize', scale=(1024,512), keep_ratio=True),
+    dict(type='Resize', scale=(2048,1024), keep_ratio=True),
     dict(type='LoadAnnotations', with_bbox=True),
+    # If you don't have a gt annotation, delete the pipeline
     dict(
         type='PackDetInputs',
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
-                   'scale_factor'))
+                   'scale_factor')
+                   )
 ]
 train_dataloader = dict(
     batch_size=2,
@@ -62,14 +73,14 @@ val_dataloader = dict(
         data_root=data_root,
         ann_file=data_root + 'val/coco_annotations.json',
         data_prefix=dict(img='val/images/'),
-        test_mode=True,
+        # test_mode=True,
         pipeline=test_pipeline,
         backend_args=backend_args))
 test_dataloader = val_dataloader
 
 val_evaluator = dict(
     type='CocoMetric',
-    ann_file=data_root + 'train/coco_annotations.json',
+    ann_file=data_root + 'val/coco_annotations.json',
     metric='bbox',
     format_only=False,
     backend_args=backend_args)

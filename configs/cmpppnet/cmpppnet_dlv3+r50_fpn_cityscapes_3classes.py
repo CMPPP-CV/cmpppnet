@@ -1,6 +1,6 @@
 _base_ = [
     '../_base_/models/cmppp_dlv3+r50_fpn.py',
-    '../_base_/datasets/visdrone.py',
+    '../_base_/datasets/cityscapes_detection.py',
     '../_base_/schedules/schedule_2x.py',
     '../_base_/default_runtime.py',
 ]
@@ -8,22 +8,35 @@ _base_ = [
 
 
 train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=128, val_interval=5)
+classes = ('person', 'car')
 train_dataloader = dict(
-    batch_size=16,
-    num_workers=4
+    batch_size=8,
+    num_workers=4,
+    dataset=dict(
+        dataset=dict(
+            metainfo=dict(classes=classes))
+    )
 )
+val_dataloader = dict(
+    dataset=dict(
+        metainfo=dict(classes=classes))
+    )
+test_dataloader = dict(
+    dataset=dict(
+        metainfo=dict(classes=classes))
+    )
 # default_scope = 'mmdet'
 
 model=dict(
     backbone=dict(
-        decode_head=dict(num_classes=3 + 11),
-        auxiliary_head=dict(num_classes=3 + 11)
+        decode_head=dict(num_classes=3 + len(classes)),
+        auxiliary_head=dict(num_classes=3 + len(classes))
     ),
     bbox_head=dict(
         type='CMPPPHead',
         pooling_size=16,
-        in_channels=3 + 11,
-        num_classes=11,
+        in_channels=3 + len(classes),
+        num_classes=len(classes),
     )
 )
 
@@ -36,7 +49,7 @@ param_scheduler = [
         begin=0,
         end=128,
         by_epoch=True,
-        milestones=[114, 124],
+        milestones=[96, 116],
         gamma=0.1)
 ]
 
@@ -48,4 +61,4 @@ optim_wrapper = dict(
     )
 
 # load_from='/net/milz/riedlinger/poisson_point_process/checkpoints/deeplabv3plus_r50_backbone.pth'
-load_from='/work/riedlinger/projects/kira/cmpppnet/work_dirs/cmpppnet_dlv3+r50_fpn_visdrone/epoch_72.pth'
+load_from='/work/riedlinger/projects/kira/cmpppnet/work_dirs/cmpppnet_dlv3+r50_fpn_cityscapes_3classes/epoch_10.pth'

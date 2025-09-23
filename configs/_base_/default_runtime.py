@@ -16,8 +16,8 @@ env_cfg = dict(
 
 # vis_backends = [dict(type='LocalVisBackend')]
 vis_backends = [dict(type='LocalVisBackend'),
-                 dict(type='WandbVisBackend',
-                      init_kwargs={'project': 'CMPPP'})
+                #  dict(type='WandbVisBackend',
+                #       init_kwargs={'project': 'CMPPP'})
                  ]
 visualizer = dict(
     type='DetLocalVisualizer', vis_backends=vis_backends, name='visualizer')

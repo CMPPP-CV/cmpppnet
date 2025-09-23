@@ -74,7 +74,7 @@ test_pipeline = [
 ]
 
 dataset_type = 'CocoDataset'
-data_root = 'data/coco/'
+data_root = '/net/milz/datasets/coco/2017'
 
 train_dataloader = dict(
     dataset=dict(
