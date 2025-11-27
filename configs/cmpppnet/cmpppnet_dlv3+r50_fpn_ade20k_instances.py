@@ -1,15 +1,15 @@
 _base_ = [
     '../_base_/models/cmppp_dlv3+r50_fpn.py',
-    '../_base_/datasets/cityscapes_detection.py',
+    '../_base_/datasets/ade20k_instance.py',
     '../_base_/schedules/schedule_2x.py',
     '../_base_/default_runtime.py',
 ]
 
 
 
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=128, val_interval=5)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=32, val_interval=5)
 train_dataloader = dict(
-    batch_size=12,
+    batch_size=2,
     num_workers=4
 )
 # default_scope = 'mmdet'
@@ -28,9 +28,9 @@ param_scheduler = [
     dict(
         type='MultiStepLR',
         begin=0,
-        end=128,
+        end=32,
         by_epoch=True,
-        milestones=[84, 112],
+        milestones=[24, 28],
         gamma=0.1)
 ]
 
@@ -42,4 +42,3 @@ optim_wrapper = dict(
     )
 
 load_from='/net/milz/riedlinger/poisson_point_process/checkpoints/deeplabv3plus_r50_backbone.pth'
-# load_from='/work/riedlinger/projects/kira/cmpppnet/work_dirs/cmpppnet_dlv3+r50_fpn_cityscapes_192ep_16bs/epoch_150.pth'

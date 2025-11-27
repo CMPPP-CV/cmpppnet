@@ -4,7 +4,7 @@ default_hooks = dict(
     timer=dict(type='IterTimerHook'),
     logger=dict(type='LoggerHook', interval=50),
     param_scheduler=dict(type='ParamSchedulerHook'),
-    checkpoint=dict(type='CheckpointHook', interval=10),
+    checkpoint=dict(type='CheckpointHook', interval=16),
     sampler_seed=dict(type='DistSamplerSeedHook'),
     visualization=dict(type='DetVisualizationHook'))
 
@@ -16,8 +16,8 @@ env_cfg = dict(
 
 # vis_backends = [dict(type='LocalVisBackend')]
 vis_backends = [dict(type='LocalVisBackend'),
-                #  dict(type='WandbVisBackend',
-                #       init_kwargs={'project': 'CMPPP'})
+                 dict(type='WandbVisBackend',
+                      init_kwargs={'project': 'CMPPP'})
                  ]
 visualizer = dict(
     type='DetLocalVisualizer', vis_backends=vis_backends, name='visualizer')
