@@ -29,5 +29,5 @@ class PPPLoss(nn.Module):
 
         # observation_term = torch.tensor(0.0, device=integral_term.device)
         mask = targets.sum(dim=1)
-        
+
         return (integral_term - (mask * (inputs - torch.log(pixel_scale))).sum()) / avg_factor

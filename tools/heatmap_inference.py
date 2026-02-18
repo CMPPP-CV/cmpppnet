@@ -70,7 +70,6 @@ class HeatmapInferencer(DetInferencer):
 
         result = {}
         if 'pred_instances' in data_sample:
-            print(data_sample.pred_instances)
             masks = data_sample.pred_instances.get('masks')
             pred_instances = data_sample.pred_instances.numpy()
             result = {
@@ -131,4 +130,4 @@ inferencer = HeatmapInferencer(args.config, args.checkpoint, device=device)
 
 os.makedirs(args.output, exist_ok=True)
 for p in tqdm.tqdm(glob.glob(args.input)):
-    inferencer(p, out_dir=args.output, pred_score_thr=0.01, no_save_pred=False, no_save_vis=True)
+    inferencer(p, out_dir=args.output, pred_score_thr=0.01, no_save_pred=False, no_save_vis=False)

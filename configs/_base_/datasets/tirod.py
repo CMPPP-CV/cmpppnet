@@ -74,7 +74,7 @@ val_dataloader = dict(
                 ann_file='combined_annotations/val.json',
                 data_prefix=dict(img='combined_images/val/'),
                 filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                pipeline=train_pipeline,
+                pipeline=test_pipeline,
                 backend_args=backend_args
         )
     #     dict(
@@ -146,15 +146,16 @@ test_dataloader = dict(
     persistent_workers=True,
     drop_last=False,
     sampler=dict(type='DefaultSampler', shuffle=False),
-    dataset=dict(
+    dataset=
+        dict(
                 type=dataset_type,
-                data_root=data_root+f'Domain1/High/',
-                ann_file='annotations/test.json',
-                data_prefix=dict(img='images/test'),
+                data_root=data_root,
+                ann_file='combined_annotations/val.json',
+                data_prefix=dict(img='combined_images/val/'),
                 filter_cfg=dict(filter_empty_gt=True, min_size=32),
                 pipeline=test_pipeline,
                 backend_args=backend_args
-            )
+        )
 )
 
 val_evaluator = dict(
